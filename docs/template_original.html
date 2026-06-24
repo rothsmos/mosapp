@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOS München – Lernplattform Demo</title>
+<style>
+/* ── Variables ── */
+:root{
+  --blue:#1a5fa8;
+  --blue-dark:#164d8a;
+  --orange:#e8530a;
+  --orange-dark:#c94508;
+  --bg:#eef0f3;
+  --card:#fff;
+  --border:#d0d4db;
+  --text:#1a1e26;
+  --muted:#6b7280;
+  --surface:#f3f5f8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── Top nav bar ── */
+.topbar{background:#fff;padding:0 24px;height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.topbar-brand{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.12em;text-transform:uppercase}
+.topbar-menu{display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.topbar-menu span{display:block;width:20px;height:2px;background:var(--muted);border-radius:2px}
+
+/* ── Hero header ── */
+.hero{background:#fff;padding:16px 24px 18px;border-bottom:3px solid var(--blue)}
+.hero-title{font-size:22px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:3px}
+.hero-sub{font-size:12px;color:var(--muted)}
+
+/* ── Content area ── */
+.content{padding:20px 16px;max-width:780px;margin:0 auto}
+
+/* ── Overall progress card ── */
+.prog-card{background:var(--card);border-radius:8px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--border)}
+.prog-card-title{font-size:13px;color:var(--muted);margin-bottom:8px}
+.ov-prog{display:flex;align-items:center;gap:10px}
+.ov-lbl{font-size:13px;color:var(--muted);white-space:nowrap}
+.pbw{background:#d0d4db;border-radius:99px;height:7px;flex:1;overflow:hidden}
+.pbf{height:100%;border-radius:99px;background:var(--orange);transition:width .4s}
+.plbl{font-size:12px;font-weight:600;color:var(--orange);min-width:34px;text-align:right}
+
+/* ── Topic cards ── */
+.topic{border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;background:var(--card)}
+.topic-hdr{padding:13px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border-left:4px solid transparent}
+.topic-hdr:hover{background:var(--surface)}
+.topic.open > .topic-hdr{border-left-color:var(--blue)}
+.t-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;background:var(--blue);color:#fff}
+.t-title{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.t-prog{display:flex;align-items:center;gap:8px;min-width:110px}
+.chev{color:var(--muted);font-size:11px;transition:transform .2s;flex-shrink:0}
+.topic-body{display:none;border-top:1px solid var(--border)}
+.topic-body.open{display:block}
+
+/* ── Sections ── */
+.section{border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.sec-hdr{padding:11px 16px;display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+.sec-hdr:hover{background:var(--surface)}
+.snum{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px}
+.s1 .snum{background:#dce8f8;color:var(--blue)}
+.s2 .snum{background:#fde8d8;color:#8b3200}
+.s3 .snum{background:#fef3e2;color:#7a4800}
+.smeta{flex:1}
+.stitle{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.sdesc{font-size:12px;color:var(--muted);line-height:1.5}
+.stags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 7px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.sact{display:flex;align-items:center;flex-shrink:0;margin-top:2px}
+.chkbtn{width:20px;height:20px;border-radius:4px;border:2px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chkbtn.done{background:var(--orange);border-color:var(--orange)}
+.chkbtn.done::after{content:'';display:block;width:5px;height:9px;border:2px solid white;border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px)}
+.upbtn{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+.upbtn:hover{background:var(--surface)}
+.upbtn.done{border-color:var(--orange);color:var(--orange)}
+.sec-chev{font-size:10px;color:var(--muted);transition:transform .2s;margin-top:3px;flex-shrink:0}
+.scon{display:none;padding:0 16px 16px 52px}
+.scon.open{display:block}
+
+/* ── Tabs ── */
+.ctabs{display:flex;gap:4px;margin-bottom:12px}
+.ctab{font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);cursor:pointer;color:var(--muted);background:transparent}
+.ctab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.tp{display:none}
+.tp.on{display:block}
+
+/* ── Content elements ── */
+.ctext{font-size:13px;color:var(--text);line-height:1.7}
+.docfile{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);cursor:pointer;margin-bottom:8px}
+.docfile:hover{background:#e8edf3}
+.dicon{width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.dicon.pdf{background:#dce8f8;color:var(--blue)}
+.dname{font-size:12px;color:var(--text);font-weight:500}
+.dmeta{font-size:11px;color:var(--muted)}
+.vidbox{background:var(--surface);border-radius:6px;height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);cursor:pointer;margin-bottom:8px}
+.playbtn{width:36px;height:36px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center}
+.playbtn::after{content:'';display:block;width:0;height:0;border-style:solid;border-width:8px 0 8px 14px;border-color:transparent transparent transparent white;margin-left:3px}
+.vlbl{font-size:12px;color:var(--muted)}
+.soltoggle{font-size:12px;padding:5px 12px;border-radius:4px;border:1px solid var(--border);cursor:pointer;color:var(--muted);background:transparent;margin-top:8px}
+.solbox{margin-top:10px;padding:10px 12px;background:var(--surface);border-radius:6px;border-left:3px solid var(--orange);font-size:12px;color:var(--text);line-height:1.7;display:none}
+.solbox.show{display:block}
+.abbox{padding:12px;background:var(--surface);border-radius:6px;border:1px dashed var(--border);text-align:center}
+.abbox p{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6}
+.abbtn{font-size:12px;padding:7px 18px;border-radius:4px;border:none;cursor:pointer;background:var(--orange);color:#fff;font-weight:600}
+.abbtn:hover{background:var(--orange-dark)}
+.mlhint{font-size:11px;color:var(--muted);margin-top:8px}
+
+/* ── T-Konto ── */
+.tkonto{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;font-size:12px;margin:8px 0}
+.tk-head{background:var(--surface);padding:5px 10px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);text-align:center}
+.tkleft .tk-head{border-right:1px solid var(--border)}
+.tk-row{display:contents}
+.tk-row .tkc{padding:3px 10px;color:var(--text)}
+.tk-row:nth-child(even) .tkc{background:#f9fafb}
+.tkleft .tkc{border-right:1px solid var(--border)}
+.tk-tot{background:var(--surface);padding:4px 10px;font-weight:600;border-top:1px solid var(--border);color:var(--text)}
+.tkleft .tk-tot{border-right:1px solid var(--border)}
+
+/* ── MC ── */
+.mc-q{font-size:13px;color:var(--text);font-weight:600;margin-bottom:10px;line-height:1.5}
+.mc-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.mc-opt{padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;color:var(--text);background:#fff;text-align:left}
+.mc-opt:hover{background:var(--surface)}
+.mc-opt.correct{border-color:#1D9E75;background:#E1F5EE;color:#085041}
+.mc-opt.wrong{border-color:#E24B4A;background:#FCEBEB;color:#501313}
+.mc-fb{font-size:12px;margin-top:6px;line-height:1.6;padding:6px 10px;border-radius:6px;display:none}
+.mc-fb.show{display:block}
+.mc-fb.ok{background:#E1F5EE;color:#085041}
+.mc-fb.err{background:#FCEBEB;color:#501313}
+.mc-nav{display:flex;align-items:center;gap:8px;margin-top:10px}
+.mc-navbtn{font-size:12px;padding:5px 14px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--orange);color:#fff;font-weight:600}
+.mc-navbtn:hover{background:var(--orange-dark)}
+.mc-prog{font-size:12px;color:var(--muted);flex:1;text-align:center}
+.mc-score{font-size:13px;font-weight:600;padding:10px;background:var(--surface);border-radius:6px;text-align:center;color:var(--text);display:none}
+.mc-score.show{display:block}
+
+/* ── AI bot ── */
+.aibox{border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.ai-msgs{padding:10px 12px;display:flex;flex-direction:column;gap:8px;min-height:80px;max-height:200px;overflow-y:auto}
+.ai-msg{font-size:12px;line-height:1.6;padding:6px 10px;border-radius:6px;max-width:88%}
+.ai-msg.bot{background:var(--surface);color:var(--text);align-self:flex-start;border:1px solid var(--border)}
+.ai-msg.user{background:var(--blue);color:#fff;align-self:flex-end}
+.ai-input-row{display:flex;gap:6px;padding:8px;border-top:1px solid var(--border);background:var(--surface)}
+.ai-input{flex:1;font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text)}
+.ai-send{font-size:12px;padding:6px 14px;border:none;border-radius:4px;cursor:pointer;background:var(--orange);color:#fff;font-weight:600}
+.ai-send:hover{background:var(--orange-dark)}
+
+/* ── Korrektur ── */
+.korr-box{margin-top:10px;background:var(--surface);border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.8;color:var(--text);display:none;border:1px solid var(--border)}
+.korr-box.show{display:block}
+.korr-mark{background:#fef3e2;color:#7a4800;padding:1px 3px;border-radius:3px}
+.korr-ok{background:#E1F5EE;color:#04342C;padding:1px 3px;border-radius:3px}
+.korr-hdr{font-weight:600;margin-bottom:6px;color:var(--blue)}
+
+/* ── Deadline badge ── */
+.dl-badge{font-size:11px;padding:3px 9px;border-radius:4px;border:1px solid var(--border);color:var(--muted);background:var(--surface);white-space:nowrap;flex-shrink:0;font-weight:500}
+.dl-badge.urgent{border-color:#c0392b;color:#c0392b;background:#fff}
+.dl-badge.done{border-color:var(--orange);color:var(--orange);background:#fef0e8}
+.frist-label{font-size:11px;color:var(--muted);margin-top:5px}
+.frist-label.urgent{color:#c0392b;font-weight:600}
+
+/* ── Horizontal course tabs ── */
+.htab-bar{background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.htab-bar::-webkit-scrollbar{display:none}
+.htab-list{display:flex;max-width:780px;margin:0 auto;padding:0 16px;gap:6px;padding-top:10px}
+.htab{flex:1;min-width:120px;padding:10px 12px 8px;cursor:pointer;border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;display:flex;flex-direction:column;gap:5px;background:var(--surface);transition:background .15s;position:relative;top:1px}
+.htab:hover{background:#e8edf3}
+.htab.active{background:#fff;border-color:var(--border);border-bottom:2px solid #fff;box-shadow:0 -2px 0 0 var(--blue)}
+.htab-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htab.active .htab-label{color:var(--blue)}
+.htab-prog-row{display:flex;align-items:center;gap:5px;width:100%}
+.htab-pbw{background:#d0d4db;border-radius:99px;height:4px;flex:1;overflow:hidden;min-width:30px}
+.htab-pbf{height:100%;border-radius:99px;background:var(--orange);transition:width .4s}
+.htab-pct{font-size:10px;font-weight:600;color:var(--orange);min-width:24px;text-align:right}
+.htab-dl{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htab-dl.urgent{color:#c0392b;font-weight:600}
+.htab-dl.done{color:var(--orange)}
+
+/* ── Tab panels ── */
+.tpanel{display:none}
+.tpanel.active{display:block}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-brand">MOS München</span>
+  <div class="topbar-menu"><span></span><span></span><span></span></div>
+</div>
+
+<div class="hero">
+  <h1 class="hero-title">MOS Kurse</h1>
+  <p class="hero-sub">Deine Kurse &amp; Aufgaben im Überblick</p>
+</div>
+
+<div class="htab-bar">
+  <div class="htab-list">
+    <div class="htab active" id="htab-t1" onclick="switchHTab('t1')">
+      <span class="htab-label">Buchführung</span>
+      <div class="htab-prog-row"><div class="htab-pbw"><div class="htab-pbf" id="htpb-t1" style="width:0%"></div></div><span class="htab-pct" id="htpct-t1">0%</span></div>
+      <span class="htab-dl" id="htdl-t1">lädt…</span>
+    </div>
+    <div class="htab" id="htab-t2" onclick="switchHTab('t2')">
+      <span class="htab-label">VWL</span>
+      <div class="htab-prog-row"><div class="htab-pbw"><div class="htab-pbf" id="htpb-t2" style="width:0%"></div></div><span class="htab-pct" id="htpct-t2">0%</span></div>
+      <span class="htab-dl" id="htdl-t2">lädt…</span>
+    </div>
+    <div class="htab" id="htab-t3" onclick="switchHTab('t3')">
+      <span class="htab-label">Medien</span>
+      <div class="htab-prog-row"><div class="htab-pbw"><div class="htab-pbf" id="htpb-t3" style="width:0%"></div></div><span class="htab-pct" id="htpct-t3">0%</span></div>
+      <span class="htab-dl" id="htdl-t3">lädt…</span>
+    </div>
+    <div class="htab" id="htab-t4" onclick="switchHTab('t4')">
+      <span class="htab-label">Deutsch</span>
+      <div class="htab-prog-row"><div class="htab-pbw"><div class="htab-pbf" id="htpb-t4" style="width:0%"></div></div><span class="htab-pct" id="htpct-t4">0%</span></div>
+      <span class="htab-dl" id="htdl-t4">lädt…</span>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<div class="prog-card">
+  <p class="prog-card-title">Gesamtfortschritt</p>
+  <div class="ov-prog">
+    <div class="pbw"><div class="pbf" id="overall-bar" style="width:0%"></div></div>
+    <span class="plbl" id="overall-lbl">0%</span>
+  </div>
+</div>
+
+<!-- ══ TOPIC 1: Buchführung ══ -->
+<div class="tpanel active" id="panel-t1">
+<div class="topic open" id="t1">
+  <div class="topic-hdr" onclick="toggleTopic('t1')">
+    <div class="t-icon" style="background:#E6F1FB;color:#0C447C">01</div>
+    <span class="t-title">Buchführung – Das Konto</span>
+    <div class="t-prog"><div class="pbw"><div class="pbf" id="prog-t1" style="width:0%"></div></div><span class="plbl" id="lbl-t1">0%</span></div>
+    <span class="dl-badge" id="dl-t1">lädt…</span>
+    <span class="chev" id="chev-t1" style="transform:rotate(90deg)">▶</span>
+  </div>
+  <div class="topic-body open" id="body-t1">
+    <div class="section s1">
+      <div class="sec-hdr" onclick="toggleSec('t1s1')">
+        <div class="snum">1</div>
+        <div class="smeta"><div class="stitle">Theorie</div><div class="sdesc">T-Konto, Soll und Haben, Buchungssätze</div><div class="stags"><span class="tag">Text</span><span class="tag">PDF</span><span class="tag">Video</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t1-1" onclick="doCheck('t1',1)"></button></div>
+        <span class="sec-chev" id="sc-t1s1" style="transform:rotate(90deg)">▶</span>
+      </div>
+      <div class="scon open" id="t1s1">
+        <div class="ctabs" id="tabs-t1s1">
+          <button class="ctab on" onclick="switchTab('t1s1',0,3)">Text</button>
+          <button class="ctab" onclick="switchTab('t1s1',1,3)">PDF</button>
+          <button class="ctab" onclick="switchTab('t1s1',2,3)">Video</button>
+        </div>
+        <div class="tp on" id="t1s1-0">
+          <div class="ctext">Ein <strong>Konto</strong> ist ein zweiseitiges Rechenschema. Die linke Seite heißt <em>Soll</em>, die rechte <em>Haben</em>.<br><br>Jeder Buchungssatz folgt dem Prinzip: <strong>Soll an Haben</strong>. Aktive Bestandskonten werden im Soll erhöht, im Haben vermindert.</div>
+          <div style="margin-top:12px">
+            <div style="font-size:11px;font-weight:500;color:#888;margin-bottom:6px">Beispiel: Kasse</div>
+            <div class="tkonto">
+              <div class="tkleft"><div class="tk-head">Soll</div><div class="tk-row"><div class="tkc">Anfangsbestand</div><div class="tkc" style="text-align:right">5.000 €</div></div><div class="tk-row"><div class="tkc">Einzahlung</div><div class="tkc" style="text-align:right">1.200 €</div></div><div style="display:flex"><div class="tk-tot" style="flex:1">Summe</div><div class="tk-tot">6.200 €</div></div></div>
+              <div><div class="tk-head">Haben</div><div class="tk-row"><div class="tkc">Auszahlung</div><div class="tkc" style="text-align:right">800 €</div></div><div class="tk-row"><div class="tkc">Schlussbestand</div><div class="tkc" style="text-align:right">5.400 €</div></div><div style="display:flex"><div class="tk-tot" style="flex:1">Summe</div><div class="tk-tot">6.200 €</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="tp" id="t1s1-1"><div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Das Konto – Grundlagen.pdf</div><div class="dmeta">3 Seiten · 420 KB</div></div></div></div>
+        <div class="tp" id="t1s1-2"><div class="vidbox"><div class="playbtn"></div><span class="vlbl">Das T-Konto erklärt (8:32 min)</span></div></div>
+      </div>
+    </div>
+    <div class="section s2">
+      <div class="sec-hdr" onclick="toggleSec('t1s2')">
+        <div class="snum">2</div>
+        <div class="smeta"><div class="stitle">Beispielaufgabe</div><div class="sdesc">Geschäftsvorfälle buchen und Schlussbestand ermitteln</div><div class="stags"><span class="tag">Aufgabe</span><span class="tag">Lösung</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t1-2" onclick="doCheck('t1',2)"></button></div>
+        <span class="sec-chev" id="sc-t1s2">▶</span>
+      </div>
+      <div class="scon" id="t1s2">
+        <div class="ctext"><strong>Aufgabe:</strong> Ein Unternehmen hat folgende Vorfälle im Januar:<br><br>1. Anfangsbestand Kasse: 3.000 €<br>2. Barverkauf Ware: 800 €<br>3. Barkauf Büromaterial: 150 €<br>4. Barentnahme Privat: 200 €<br><br>Trage alle Vorfälle ins T-Konto ein und ermittle den Schlussbestand.</div>
+        <div class="docfile" style="margin-top:10px"><div class="dicon pdf">PDF</div><div><div class="dname">Beispielaufgabe_Konto.pdf</div><div class="dmeta">1 Seite · 185 KB</div></div></div>
+        <button class="soltoggle" onclick="toggleSol(this)">Musterlösung anzeigen</button>
+        <div class="solbox">Soll: 3.000 + 800 = 3.800 €<br>Haben: 150 + 200 + <em>SB 3.450</em> = 3.800 €<br><br>Schlussbestand = <strong>3.450 €</strong></div>
+      </div>
+    </div>
+    <div class="section s3">
+      <div class="sec-hdr" onclick="toggleSec('t1s3')">
+        <div class="snum">3</div>
+        <div class="smeta"><div class="stitle">Aufgabe & Abgabe</div><div class="sdesc">Übungsaufgabe lösen und Lösung hochladen</div><div class="stags"><span class="tag">Abgabe</span><span class="tag">Musterlösung nach Abgabe</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="upbtn" id="u-t1-3" onclick="doUpload('t1',3,'t1upl')">↑ Hochladen</button></div>
+        <span class="sec-chev" id="sc-t1s3">▶</span>
+      </div>
+      <div class="scon" id="t1s3">
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Übungsaufgabe_Konto.pdf</div><div class="dmeta">2 Seiten · 210 KB</div></div></div>
+        <div class="abbox" style="margin-top:8px"><p>Lade deine ausgefüllte Lösung hoch.<br>Nach der Abgabe wird die Musterlösung freigeschaltet.<br><span class="frist-label" id="frist-t1">Frist: lädt…</span></p><button class="abbtn" id="t1upl" onclick="doUpload('t1',3,'t1upl')">Datei hochladen</button><div class="mlhint" id="ml-t1"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOPIC 2: VWL ══ -->
+</div><!-- /panel-t1 -->
+<div class="tpanel" id="panel-t2">
+<div class="topic" id="t2">
+  <div class="topic-hdr" onclick="toggleTopic('t2')">
+    <div class="t-icon" style="background:#EEEDFE;color:#3C3489">02</div>
+    <span class="t-title">VWL – Grundlagen der Preisbildung</span>
+    <div class="t-prog"><div class="pbw"><div class="pbf" id="prog-t2" style="width:0%"></div></div><span class="plbl" id="lbl-t2">0%</span></div>
+    <span class="dl-badge" id="dl-t2">lädt…</span>
+    <span class="chev" id="chev-t2">▶</span>
+  </div>
+  <div class="topic-body" id="body-t2">
+    <div class="section s1">
+      <div class="sec-hdr" onclick="toggleSec('t2s1')">
+        <div class="snum">1</div>
+        <div class="smeta"><div class="stitle">Einführung</div><div class="sdesc">Angebot, Nachfrage und Marktgleichgewicht</div><div class="stags"><span class="tag">PDF</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t2-1" onclick="doCheck('t2',1)"></button></div>
+        <span class="sec-chev" id="sc-t2s1">▶</span>
+      </div>
+      <div class="scon" id="t2s1">
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Preisbildung_Einführung.pdf</div><div class="dmeta">5 Seiten · 680 KB</div></div></div>
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Preisbildung_Schaubild_Angebot_Nachfrage.pdf</div><div class="dmeta">1 Seite · 240 KB · Grafik</div></div></div>
+      </div>
+    </div>
+    <div class="section s2">
+      <div class="sec-hdr" onclick="toggleSec('t2s2')">
+        <div class="snum">2</div>
+        <div class="smeta"><div class="stitle">Vertiefendes Material</div><div class="sdesc">Elastizität, Marktversagen, staatliche Eingriffe</div><div class="stags"><span class="tag">PDF</span><span class="tag">Artikel</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t2-2" onclick="doCheck('t2',2)"></button></div>
+        <span class="sec-chev" id="sc-t2s2">▶</span>
+      </div>
+      <div class="scon" id="t2s2">
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Preiselastizität_Vertiefung.pdf</div><div class="dmeta">8 Seiten · 1,1 MB</div></div></div>
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Fallstudie_Benzinpreise_Deutschland.pdf</div><div class="dmeta">3 Seiten · 420 KB · Lektüre</div></div></div>
+      </div>
+    </div>
+    <div class="section s3">
+      <div class="sec-hdr" onclick="toggleSec('t2s3')">
+        <div class="snum">3</div>
+        <div class="smeta"><div class="stitle">Gruppenaufgabe – Präsentation</div><div class="sdesc">Gruppenupload einer Präsentation zur Preisbildung</div><div class="stags"><span class="tag">Gruppenabgabe</span><span class="tag">Präsentation</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="upbtn" id="u-t2-3" onclick="doUpload('t2',3,'t2upl')">↑ Hochladen</button></div>
+        <span class="sec-chev" id="sc-t2s3">▶</span>
+      </div>
+      <div class="scon" id="t2s3">
+        <div class="ctext" style="margin-bottom:10px"><strong>Aufgabe:</strong> Analysiert in eurer Gruppe ein reales Beispiel für Preisbildung (z.B. Wohnungsmarkt München, Supermarktpreise, Energiemarkt). Erstellt eine Präsentation (min. 8 Folien) und ladet sie als Gruppe hoch.<br><br>Abgabe bis: <strong>15.04.2026</strong> · Gruppe: max. 4 Personen</div>
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Aufgabenstellung_Gruppenarbeit.pdf</div><div class="dmeta">2 Seiten · 310 KB</div></div></div>
+        <div class="abbox" style="margin-top:8px"><p>Gruppenupload – nur ein Mitglied lädt hoch.<br>Dateiformat: .pptx oder .pdf, max. 25 MB<br><span class="frist-label" id="frist-t2">Frist: lädt…</span></p><button class="abbtn" id="t2upl" onclick="doUpload('t2',3,'t2upl')">Präsentation hochladen</button><div class="mlhint" id="ml-t2"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOPIC 3: Medien ══ -->
+</div><!-- /panel-t2 -->
+<div class="tpanel" id="panel-t3">
+<div class="topic" id="t3">
+  <div class="topic-hdr" onclick="toggleTopic('t3')">
+    <div class="t-icon" style="background:#E1F5EE;color:#085041">03</div>
+    <span class="t-title">Medien – Grundlagen</span>
+    <div class="t-prog"><div class="pbw"><div class="pbf" id="prog-t3" style="width:0%"></div></div><span class="plbl" id="lbl-t3">0%</span></div>
+    <span class="dl-badge" id="dl-t3">lädt…</span>
+    <span class="chev" id="chev-t3">▶</span>
+  </div>
+  <div class="topic-body" id="body-t3">
+    <div class="section s1">
+      <div class="sec-hdr" onclick="toggleSec('t3s1')">
+        <div class="snum">1</div>
+        <div class="smeta"><div class="stitle">Einführung</div><div class="sdesc">Was sind Medien? Medienwandel und Medienarten</div><div class="stags"><span class="tag">Video</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t3-1" onclick="doCheck('t3',1)"></button></div>
+        <span class="sec-chev" id="sc-t3s1">▶</span>
+      </div>
+      <div class="scon" id="t3s1">
+        <div class="vidbox"><div class="playbtn"></div><span class="vlbl">Einführung in die Medienwelt (12:15 min)</span></div>
+        <div class="vidbox"><div class="playbtn"></div><span class="vlbl">Medienwandel – von Print zu Digital (6:40 min)</span></div>
+      </div>
+    </div>
+    <div class="section s2">
+      <div class="sec-hdr" onclick="toggleSec('t3s2')">
+        <div class="snum">2</div>
+        <div class="smeta"><div class="stitle">Vertiefendes Material</div><div class="sdesc">Medienanalyse, Medienkritik, Fake News</div><div class="stags"><span class="tag">PDF</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t3-2" onclick="doCheck('t3',2)"></button></div>
+        <span class="sec-chev" id="sc-t3s2">▶</span>
+      </div>
+      <div class="scon" id="t3s2">
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Medienanalyse_Grundlagen.pdf</div><div class="dmeta">6 Seiten · 750 KB</div></div></div>
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Fake_News_erkennen.pdf</div><div class="dmeta">4 Seiten · 510 KB</div></div></div>
+      </div>
+    </div>
+    <div class="section s3">
+      <div class="sec-hdr" onclick="toggleSec('t3s3')">
+        <div class="snum">3</div>
+        <div class="smeta"><div class="stitle">Selbsttest – KI-Bot</div><div class="sdesc">Teste dein Wissen im Gespräch mit dem Lern-Bot</div><div class="stags"><span class="tag">KI-Bot</span><span class="tag">Selbsttest</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t3-3" onclick="doCheck('t3',3)"></button></div>
+        <span class="sec-chev" id="sc-t3s3">▶</span>
+      </div>
+      <div class="scon" id="t3s3">
+        <div class="frist-label" id="frist-t3" style="margin-bottom:8px">Frist: lädt…</div>
+        <div class="aibox">
+          <div class="ai-msgs" id="bot3-msgs">
+            <div class="ai-msg bot">Hallo! Ich bin dein Lern-Bot für das Thema Medien. Ich stelle dir 3 Fragen, um dein Verständnis zu prüfen. Bereit?<br><br><strong>Frage 1:</strong> Was unterscheidet Massenmedien von interpersonaler Kommunikation?</div>
+          </div>
+          <div class="ai-input-row">
+            <input class="ai-input" id="bot3-in" placeholder="Antwort eingeben …" onkeydown="if(event.key==='Enter')sendBot(3)">
+            <button class="ai-send" onclick="sendBot(3)">Senden</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOPIC 4: Deutsch ══ -->
+</div><!-- /panel-t3 -->
+<div class="tpanel" id="panel-t4">
+<div class="topic" id="t4">
+  <div class="topic-hdr" onclick="toggleTopic('t4')">
+    <div class="t-icon" style="background:#FAEEDA;color:#412402">04</div>
+    <span class="t-title">Deutsch – Die Charakterisierung</span>
+    <div class="t-prog"><div class="pbw"><div class="pbf" id="prog-t4" style="width:0%"></div></div><span class="plbl" id="lbl-t4">0%</span></div>
+    <span class="dl-badge" id="dl-t4">lädt…</span>
+    <span class="chev" id="chev-t4">▶</span>
+  </div>
+  <div class="topic-body" id="body-t4">
+    <div class="section s1">
+      <div class="sec-hdr" onclick="toggleSec('t4s1')">
+        <div class="snum">1</div>
+        <div class="smeta"><div class="stitle">Einführung</div><div class="sdesc">Aufbau und Merkmale einer Charakterisierung</div><div class="stags"><span class="tag">PDF</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t4-1" onclick="doCheck('t4',1)"></button></div>
+        <span class="sec-chev" id="sc-t4s1">▶</span>
+      </div>
+      <div class="scon" id="t4s1">
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Charakterisierung_Einführung.pdf</div><div class="dmeta">4 Seiten · 530 KB</div></div></div>
+        <div class="docfile"><div class="dicon pdf">PDF</div><div><div class="dname">Charakterisierung_Beispiel_annotiert.pdf</div><div class="dmeta">2 Seiten · 380 KB · Mustertext mit Anmerkungen</div></div></div>
+      </div>
+    </div>
+    <div class="section s2">
+      <div class="sec-hdr" onclick="toggleSec('t4s2')">
+        <div class="snum">2</div>
+        <div class="smeta"><div class="stitle">Selbsttest – Multiple Choice</div><div class="sdesc">Überprüfe dein Wissen zur Charakterisierung</div><div class="stags"><span class="tag">Multiple Choice</span><span class="tag">Selbsttest</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="chkbtn" id="c-t4-2" onclick="doCheck('t4',2)"></button></div>
+        <span class="sec-chev" id="sc-t4s2">▶</span>
+      </div>
+      <div class="scon" id="t4s2"><div id="mc-area"></div></div>
+    </div>
+    <div class="section s3">
+      <div class="sec-hdr" onclick="toggleSec('t4s3')">
+        <div class="snum">3</div>
+        <div class="smeta"><div class="stitle">Übungsaufsatz & KI-Korrektur</div><div class="sdesc">Aufsatz abgeben – KI gibt Feedback nach Abgabe</div><div class="stags"><span class="tag">Abgabe</span><span class="tag">KI-Korrektur</span></div></div>
+        <div class="sact" onclick="event.stopPropagation()"><button class="upbtn" id="u-t4-3" onclick="showKorr()">↑ Hochladen</button></div>
+        <span class="sec-chev" id="sc-t4s3">▶</span>
+      </div>
+      <div class="scon" id="t4s3">
+        <div class="ctext" style="margin-bottom:10px"><strong>Aufgabe:</strong> Schreibe eine Charakterisierung (ca. 300 Wörter) der Figur „Woyzeck" aus dem gleichnamigen Drama von Georg Büchner. Nutze die Einführung aus Abschnitt 1 als Leitfaden.<br><br>Lade deinen Aufsatz als .docx oder .pdf hoch. Nach der Abgabe erhältst du automatisch ein KI-Feedback.</div>
+        <div class="abbox">
+          <p>Nach dem Upload analysiert der KI-Korrektor deinen Aufsatz und gibt dir Feedback zu Struktur, Belegen und Sprache.<br><span class="frist-label" id="frist-t4">Frist: lädt…</span></p>
+          <button class="abbtn" id="t4upl" onclick="showKorr()">Aufsatz hochladen</button>
+          <div class="mlhint" id="ml-t4"></div>
+        </div>
+        <div class="korr-box" id="korr-result">
+          <div class="korr-hdr">KI-Feedback zu deinem Aufsatz</div>
+          <strong>Struktur:</strong> <span class="korr-ok">Einleitung, Hauptteil und Schluss vorhanden</span> – gut gegliedert.<br><br>
+          <strong>Textbelege:</strong> Du verwendest 2 direkte Zitate. <span class="korr-mark">Empfehlung: Mindestens 3–4 Zitate aus dem Drama einbauen</span>, um die Charaktereigenschaften zu belegen.<br><br>
+          <strong>Sprache:</strong> <span class="korr-ok">Sachlicher Ton, Präsens durchgehalten</span> – sehr gut. <span class="korr-mark">Vermeide umgangssprachliche Formulierungen wie „er ist halt so ein Typ"</span>.<br><br>
+          <strong>Gesamteindruck:</strong> Solider Aufsatz mit gutem Verständnis der Figur. Mit etwas mehr Textarbeit wird daraus eine sehr gute Charakterisierung.
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /t4 -->
+</div><!-- /panel-t4 -->
+
+</div><!-- /content -->
+
+<script>
+// Deadlines — relative to today so the demo always looks realistic
+const TODAY = new Date();
+function daysFromNow(d){const t=new Date(TODAY);t.setDate(t.getDate()+d);return t;}
+function fmtDate(d){return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});}
+
+const DEADLINES = {
+  t1: daysFromNow(3),   // in 3 Tagen → rot
+  t2: daysFromNow(14),  // in 14 Tagen → normal
+  t3: daysFromNow(6),   // in 6 Tagen → rot (< 7)
+  t4: daysFromNow(21),  // in 21 Tagen → normal
+};
+
+function daysUntil(d){return Math.ceil((d-TODAY)/(1000*60*60*24));}
+
+const S={t1:{1:false,2:false,3:false},t2:{1:false,2:false,3:false},t3:{1:false,2:false,3:false},t4:{1:false,2:false,3:false}};
+
+function renderDeadlines(){
+  ['t1','t2','t3','t4'].forEach(tid=>{
+    if(S[tid] && S[tid][3]) return;
+    const d=DEADLINES[tid];
+    const diff=daysUntil(d);
+    const badge=document.getElementById('dl-'+tid);
+    const frist=document.getElementById('frist-'+tid);
+    const htdl=document.getElementById('htdl-'+tid);
+    const urgent=diff<=7;
+    let badgeText, fristText, htText;
+    if(diff===0){badgeText='Abgabe: heute';fristText='Frist: heute!';htText='heute';}
+    else if(diff===1){badgeText='Abgabe: morgen';fristText='Frist: morgen!';htText='morgen';}
+    else if(diff<0){badgeText='Abgabe abgelaufen';fristText='Frist abgelaufen';htText='abgelaufen';}
+    else{badgeText='Abgabe: '+fmtDate(d);fristText='Frist: '+fmtDate(d)+' (in '+diff+' Tagen)';htText='bis '+fmtDate(d);}
+    badge.textContent=badgeText;
+    badge.className='dl-badge'+(urgent?' urgent':'');
+    if(frist){frist.textContent=fristText;frist.className='frist-label'+(urgent?' urgent':'');}
+    if(htdl){htdl.textContent=htText;htdl.className='htab-dl'+(urgent?' urgent':'');}
+  });
+}
+
+function switchHTab(tid){
+  ['t1','t2','t3','t4'].forEach(id=>{
+    document.getElementById('htab-'+id).classList.toggle('active',id===tid);
+    document.getElementById('panel-'+id).classList.toggle('active',id===tid);
+  });
+}
+
+
+function getProg(tid){return Math.round(Object.values(S[tid]).filter(Boolean).length/3*100)}
+function updateBars(){
+  let tot=0;
+  ['t1','t2','t3','t4'].forEach(tid=>{
+    const p=getProg(tid);
+    document.getElementById('prog-'+tid).style.width=p+'%';
+    document.getElementById('lbl-'+tid).textContent=p+'%';
+    document.getElementById('htpb-'+tid).style.width=p+'%';
+    document.getElementById('htpct-'+tid).textContent=p+'%';
+    tot+=p;
+    if(S[tid][3]){
+      const badge=document.getElementById('dl-'+tid);
+      badge.textContent='Abgegeben';
+      badge.className='dl-badge done';
+      const htdl=document.getElementById('htdl-'+tid);
+      htdl.textContent='Abgegeben';
+      htdl.className='htab-dl done';
+    } else {
+      renderDeadlines();
+    }
+  });
+  const ov=Math.round(tot/4);
+  document.getElementById('overall-bar').style.width=ov+'%';
+  document.getElementById('overall-lbl').textContent=ov+'%';
+}
+function doCheck(tid,sec){S[tid][sec]=!S[tid][sec];document.getElementById('c-'+tid+'-'+sec).className='chkbtn'+(S[tid][sec]?' done':'');updateBars()}
+function doUpload(tid,sec,btnId){
+  S[tid][sec]=true;
+  document.getElementById('u-'+tid+'-'+sec).textContent='✓ Abgegeben';
+  document.getElementById('u-'+tid+'-'+sec).className='upbtn done';
+  const ab=document.getElementById(btnId);
+  if(ab){ab.textContent='✓ Hochgeladen';ab.disabled=true;ab.style.color='#0F6E56';ab.style.borderColor='#1D9E75';}
+  const ml=document.getElementById('ml-'+tid);
+  if(ml){ml.textContent='Musterlösung freigeschaltet';ml.style.color='#0F6E56';}
+  updateBars();
+}
+function toggleTopic(tid){
+  const t=document.getElementById(tid);
+  const b=document.getElementById('body-'+tid),c=document.getElementById('chev-'+tid),o=b.classList.toggle('open');
+  o?t.classList.add('open'):t.classList.remove('open');
+  c.style.transform=o?'rotate(90deg)':'';
+}
+function toggleSec(id){
+  const el=document.getElementById(id),sc=document.getElementById('sc-'+id),o=el.classList.toggle('open');
+  if(sc)sc.style.transform=o?'rotate(90deg)':'';
+}
+function switchTab(prefix,idx,total){
+  for(let i=0;i<total;i++)document.getElementById(prefix+'-'+i).className='tp'+(i===idx?' on':'');
+  document.getElementById('tabs-'+prefix).querySelectorAll('.ctab').forEach((t,i)=>t.className='ctab'+(i===idx?' on':''));
+}
+function toggleSol(btn){const b=btn.nextElementSibling,s=b.classList.toggle('show');btn.textContent=s?'Musterlösung verbergen':'Musterlösung anzeigen'}
+
+// MC
+const mcQ=[
+  {q:'Was steht am Anfang einer Charakterisierung?',opts:['Ein Zitat aus dem Text','Eine Einleitung mit Name, Werk und Autor','Eine detaillierte Beschreibung des Aussehens','Die Beziehung zu anderen Figuren'],correct:1,fb:'Richtig! Die Einleitung nennt Name der Figur, Werk und Autor sowie die zentrale These.'},
+  {q:'Welche Zeitform wird in einer Charakterisierung verwendet?',opts:['Vergangenheit (Präteritum)','Zukunft (Futur)','Gegenwart (Präsens)','Beides ist möglich'],correct:2,fb:'Korrekt! Eine literarische Analyse wird immer im Präsens geschrieben.'},
+  {q:'Was ist ein wichtiges Merkmal einer guten Charakterisierung?',opts:['Eigene Meinung ohne Belege','Textbelege durch direkte Zitate','Nacherzählung der Handlung','Viele Adjektive zur Beschreibung'],correct:1,fb:'Genau! Behauptungen über die Figur müssen immer mit direkten Textstellen belegt werden.'}
+];
+let mcCur=0,mcScore=0,mcAnswered=false;
+function renderMC(){
+  const a=document.getElementById('mc-area');
+  if(mcCur>=mcQ.length){a.innerHTML='<div class="mc-score show">Quiz abgeschlossen! Ergebnis: '+mcScore+' / '+mcQ.length+' richtig</div>';doCheck('t4',2);return;}
+  const q=mcQ[mcCur];
+  a.innerHTML='<div class="mc-q">Frage '+(mcCur+1)+' von '+mcQ.length+': '+q.q+'</div><div class="mc-opts" id="mc-opts">'+q.opts.map((o,i)=>'<button class="mc-opt" onclick="mcAnswer('+i+')">'+o+'</button>').join('')+'</div><div class="mc-fb" id="mc-fb"></div><div class="mc-nav"><button class="mc-navbtn" id="mc-next" onclick="mcNext()" style="display:none">Weiter →</button><span class="mc-prog" id="mc-prog">'+mcScore+' richtig</span></div>';
+  mcAnswered=false;
+}
+function mcAnswer(i){
+  if(mcAnswered)return;mcAnswered=true;
+  const q=mcQ[mcCur];
+  document.querySelectorAll('.mc-opt').forEach((o,idx)=>{o.disabled=true;if(idx===q.correct)o.classList.add('correct');else if(idx===i&&i!==q.correct)o.classList.add('wrong');});
+  const fb=document.getElementById('mc-fb');
+  if(i===q.correct){mcScore++;fb.className='mc-fb show ok';}else{fb.className='mc-fb show err';}
+  fb.textContent=q.fb;
+  document.getElementById('mc-prog').textContent=mcScore+' richtig';
+  document.getElementById('mc-next').style.display='inline-block';
+}
+function mcNext(){mcCur++;renderMC()}
+renderMC();
+
+// Bot
+const botFlow=[
+  'Gute Antwort! Massenmedien richten sich an ein disperses Publikum ohne direkte Rückkopplung, während interpersonale Kommunikation direkt zwischen Personen stattfindet.\n\nFrage 2: Nenne zwei Beispiele für digitale Massenmedien und erkläre kurz, warum sie als Massenmedien gelten.',
+  'Super! Digitale Massenmedien wie Social Media oder Online-Nachrichtenportale erreichen Millionen gleichzeitig.\n\nFrage 3 (letzte): Was versteht man unter „Medienkompetenz" und warum ist sie heute wichtig?',
+  'Sehr gut! Medienkompetenz bedeutet, Medien kritisch zu nutzen, Inhalte zu bewerten und eigene Medienprodukte zu erstellen. Du hast alle 3 Fragen beantwortet – der Lernbereich gilt als erledigt. ✓'
+];
+let botStep=0;
+function sendBot(n){
+  const inp=document.getElementById('bot3-in'),val=inp.value.trim();
+  if(!val)return;inp.value='';
+  const msgs=document.getElementById('bot3-msgs');
+  msgs.innerHTML+='<div class="ai-msg user">'+val+'</div>';
+  if(botStep<botFlow.length){
+    const r=botFlow[botStep++];
+    setTimeout(()=>{msgs.innerHTML+='<div class="ai-msg bot">'+r.replace(/\n/g,'<br>')+'</div>';msgs.scrollTop=msgs.scrollHeight;if(botStep>=botFlow.length)doCheck('t3',3);},600);
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showKorr(){
+  S['t4'][3]=true;
+  document.getElementById('u-t4-3').textContent='✓ Abgegeben';
+  document.getElementById('u-t4-3').className='upbtn done';
+  const ab=document.getElementById('t4upl');
+  ab.textContent='✓ Hochgeladen';ab.disabled=true;ab.style.color='#0F6E56';ab.style.borderColor='#1D9E75';
+  const ml=document.getElementById('ml-t4');
+  ml.textContent='KI-Korrektur wird verarbeitet …';ml.style.color='#888';
+  setTimeout(()=>{ml.textContent='KI-Feedback verfügbar';ml.style.color='#0F6E56';document.getElementById('korr-result').classList.add('show');},1200);
+  updateBars();
+}
+
+renderDeadlines();
+updateBars();
+</script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOS München – Lernplattform</title>
+<style>
+/* ── Variables ── */
+:root{
+  --blue:#1a5fa8;
+  --blue-dark:#164d8a;
+  --orange:#e8530a;
+  --orange-dark:#c94508;
+  --bg:#eef0f3;
+  --card:#fff;
+  --border:#d0d4db;
+  --text:#1a1e26;
+  --muted:#6b7280;
+  --surface:#f3f5f8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── Top nav bar ── */
+.topbar{background:#fff;padding:0 24px;height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.topbar-brand{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.12em;text-transform:uppercase}
+.topbar-menu{display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.topbar-menu span{display:block;width:20px;height:2px;background:var(--muted);border-radius:2px}
+
+/* ── Hero header ── */
+.hero{background:#fff;padding:16px 24px 18px;border-bottom:3px solid var(--blue)}
+.hero-title{font-size:22px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:3px}
+.hero-sub{font-size:12px;color:var(--muted)}
+
+/* ── Content area ── */
+.content{padding:20px 16px;max-width:780px;margin:0 auto}
+
+/* ── Overall progress card ── */
+.prog-card{background:var(--card);border-radius:8px;padding:14px 16px;margin-bottom:16px;border:1px solid var(--border)}
+.prog-card-title{font-size:13px;color:var(--muted);margin-bottom:8px}
+.ov-prog{display:flex;align-items:center;gap:10px}
+.ov-lbl{font-size:13px;color:var(--muted);white-space:nowrap}
+.pbw{background:#d0d4db;border-radius:99px;height:7px;flex:1;overflow:hidden}
+.pbf{height:100%;border-radius:99px;background:var(--orange);transition:width .4s}
+.plbl{font-size:12px;font-weight:600;color:var(--orange);min-width:34px;text-align:right}
+
+/* ── Topic cards ── */
+.topic{border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;background:var(--card)}
+.topic-hdr{padding:13px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border-left:4px solid transparent}
+.topic-hdr:hover{background:var(--surface)}
+.topic.open > .topic-hdr{border-left-color:var(--blue)}
+.t-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.t-title{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.t-prog{display:flex;align-items:center;gap:8px;min-width:110px}
+.chev{color:var(--muted);font-size:11px;transition:transform .2s;flex-shrink:0}
+.topic-body{display:none;border-top:1px solid var(--border)}
+.topic-body.open{display:block}
+
+/* ── Sections ── */
+.section{border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.sec-hdr{padding:11px 16px;display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+.sec-hdr:hover{background:var(--surface)}
+.snum{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px}
+.s1 .snum{background:#dce8f8;color:var(--blue)}
+.s2 .snum{background:#fde8d8;color:#8b3200}
+.s3 .snum{background:#fef3e2;color:#7a4800}
+.smeta{flex:1}
+.stitle{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.sdesc{font-size:12px;color:var(--muted);line-height:1.5}
+.stags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 7px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.sact{display:flex;align-items:center;flex-shrink:0;margin-top:2px}
+.chkbtn{width:20px;height:20px;border-radius:4px;border:2px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chkbtn.done{background:var(--orange);border-color:var(--orange)}
+.chkbtn.done::after{content:'';display:block;width:5px;height:9px;border:2px solid white;border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px)}
+.sec-chev{font-size:10px;color:var(--muted);transition:transform .2s;margin-top:3px;flex-shrink:0}
+.scon{display:none;padding:0 16px 16px 52px}
+.scon.open{display:block}
+
+/* ── Content elements ── */
+.ctext{font-size:13px;color:var(--text);line-height:1.7}
+.docfile{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);cursor:pointer;margin-bottom:8px}
+.docfile:hover{background:#e8edf3}
+.dicon{width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:#dce8f8;color:var(--blue)}
+.dname{font-size:12px;color:var(--text);font-weight:500}
+.dmeta{font-size:11px;color:var(--muted)}
+.abbox{padding:12px;background:var(--surface);border-radius:6px;border:1px dashed var(--border);text-align:center;margin-top:8px}
+.abbox p{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6}
+.abbtn{font-size:12px;padding:7px 18px;border-radius:4px;border:none;cursor:pointer;background:var(--orange);color:#fff;font-weight:600}
+.abbtn:hover{background:var(--orange-dark)}
+.frist-label{font-size:11px;color:var(--muted)}
+.frist-label.urgent{color:#c0392b;font-weight:600}
+.vidbox{background:var(--surface);border-radius:6px;height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border);cursor:pointer;margin-bottom:8px}
+.playbtn{width:36px;height:36px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center}
+.playbtn::after{content:'';display:block;width:0;height:0;border-style:solid;border-width:8px 0 8px 14px;border-color:transparent transparent transparent white;margin-left:3px}
+.vlbl{font-size:12px;color:var(--muted)}
+
+/* ── Horizontal course tabs ── */
+.htab-bar{background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.htab-bar::-webkit-scrollbar{display:none}
+.htab-list{display:flex;max-width:780px;margin:0 auto;padding:0 16px;gap:6px;padding-top:10px}
+.htab{flex:1;min-width:120px;padding:10px 12px 8px;cursor:pointer;border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;display:flex;flex-direction:column;gap:5px;background:var(--surface);transition:background .15s;position:relative;top:1px}
+.htab:hover{background:#e8edf3}
+.htab.active{background:#fff;border-color:var(--border);border-bottom:2px solid #fff;box-shadow:0 -2px 0 0 var(--blue)}
+.htab-label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htab.active .htab-label{color:var(--blue)}
+.htab-prog-row{display:flex;align-items:center;gap:5px;width:100%}
+.htab-pbw{background:#d0d4db;border-radius:99px;height:4px;flex:1;overflow:hidden;min-width:30px}
+.htab-pbf{height:100%;border-radius:99px;background:var(--orange);transition:width .4s}
+.htab-pct{font-size:10px;font-weight:600;color:var(--orange);min-width:24px;text-align:right}
+
+/* ── Notice banner ── */
+#notice{background:#FCEBEB;color:#501313;padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:12px;line-height:1.5;display:none}
+
+/* ── Aufgaben-Karte ── */
+.assign-status{margin-bottom:6px}
+.assign-upload{margin-top:10px}
+.assign-upload input[type=file]{font-size:12px;margin-bottom:8px;display:block;color:var(--muted)}
+.status-ok{border-color:var(--orange)!important;color:var(--orange)!important}
+.status-draft{border-color:var(--blue)!important;color:var(--blue)!important}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-brand">MOS München</span>
+  <div class="topbar-menu"><span></span><span></span><span></span></div>
+</div>
+
+<div class="hero">
+  <h1 class="hero-title" id="hero-title">BWR</h1>
+  <p class="hero-sub" id="hero-sub">Betriebswirtschaft &amp; Rechnungswesen – Abschnitte &amp; Aufgaben</p>
+</div>
+
+<div class="htab-bar">
+  <div class="htab-list" id="tab-list">
+    <div class="htab active">
+      <span class="htab-label">Wird geladen…</span>
+      <div class="htab-prog-row"><div class="htab-pbw"><div class="htab-pbf" style="width:0%"></div></div><span class="htab-pct">0%</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="prog-card">
+    <p class="prog-card-title">Gesamtfortschritt</p>
+    <div class="ov-prog">
+      <div class="pbw"><div class="pbf" id="overall-bar" style="width:0%"></div></div>
+      <span class="plbl" id="overall-lbl">0%</span>
+    </div>
+  </div>
+  <div id="notice"></div>
+  <div id="dyn-content">
+    <p style="padding:16px;color:var(--muted);font-size:13px">Kursinhalte werden geladen…</p>
+  </div>
+</div>
+
+<script>
+const PROXY = 'http://localhost:3001';
+const done = {};        // cmid → bool (Abhaken)
+let allSections = [];
+let assignMap   = {};   // cmid → { id: assignmentid, duedate, … }
+let activeSec   = 0;
+
+// ── Fallback ──
+const DEMO = [
+  { id: 9001, name: 'Buchführung – Das Konto', uservisible: true, modules: [
+    { id: 9011, name: 'Theorie: T-Konto, Soll & Haben', modname: 'resource', uservisible: true, url: '#', contents: [{ filesize: 430080 }] },
+    { id: 9012, name: 'Beispielaufgabe: Geschäftsvorfälle buchen', modname: 'resource', uservisible: true, url: '#', contents: [{ filesize: 189440 }] },
+    { id: 9013, name: 'Übungsaufgabe abgeben', modname: 'assign', uservisible: true, url: '#', contents: [] }
+  ]},
+  { id: 9002, name: 'VWL – Grundlagen der Preisbildung', uservisible: true, modules: [
+    { id: 9021, name: 'Einführung: Angebot & Nachfrage', modname: 'resource', uservisible: true, url: '#', contents: [{ filesize: 696320 }] },
+    { id: 9022, name: 'Preiselastizität – Vertiefung', modname: 'resource', uservisible: true, url: '#', contents: [{ filesize: 1153433 }] },
+    { id: 9023, name: 'Gruppenaufgabe – Präsentation', modname: 'assign', uservisible: true, url: '#', contents: [] }
+  ]},
+  { id: 9003, name: 'Medien – Grundlagen', uservisible: true, modules: [
+    { id: 9031, name: 'Einführung in die Medienwelt', modname: 'url', uservisible: true, url: '#', contents: [] },
+    { id: 9032, name: 'Grundlagen.pdf', modname: 'resource', uservisible: true, url: '#', contents: [{ filename:'Grundlagen.pdf', fileurl:'#', filesize: 768000 }] }
+  ]}
+];
+
+// ── Hilfsfunktionen ──────────────────────────────────────────────────────────
+async function api(path) {
+  const r = await fetch(PROXY + path);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  if (d && d.error) throw new Error(d.error);
+  return d;
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(b) { return !b?'': b<1048576?Math.round(b/1024)+' KB':(b/1048576).toFixed(1)+' MB'; }
+function fmtDate(ts) { return ts ? new Date(ts*1000).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}) : ''; }
+function modLabel(t) { return ({resource:'PDF',url:'URL',page:'Seite',assign:'Aufgabe',quiz:'Quiz',folder:'Ordner',forum:'Forum',attendance:'Anwesenheit',chat:'Chat',label:'Info'})[t]||'MOD'; }
+function proxyUrl(url) { return PROXY+'/api/file?url='+encodeURIComponent(url); }
+function showNotice(msg) { const el=document.getElementById('notice'); el.textContent=msg; el.style.display=msg?'block':'none'; }
+
+// ── Datei-Karte via Proxy ──
+function fileCard(name, fileurl, filesize) {
+  const href = esc(proxyUrl(fileurl));
+  return `<div class="docfile" onclick="window.open('${href}','_blank')">
+    <div class="dicon">PDF</div>
+    <div><div class="dname">${esc(name)}</div><div class="dmeta">${fmt(filesize)}</div></div>
+  </div>`;
+}
+
+// ── Modul-Inhalt ────────────────────────────────────────────────────────────
+function renderModContent(mod) {
+  if (mod.modname === 'label') return `<div class="ctext">${mod.description || esc(mod.name)}</div>`;
+
+  if (mod.modname === 'folder') {
+    const files = (mod.contents||[]).filter(f => f.fileurl && f.type === 'file');
+    return files.length
+      ? files.map(f => fileCard(f.filename, f.fileurl, f.filesize)).join('')
+      : `<div class="ctext">Ordner ist leer.</div>`;
+  }
+
+  if (mod.modname === 'assign') {
+    const asgn = assignMap[mod.id] || {};
+    const due  = asgn.duedate ? `<div class="frist-label" style="margin:4px 0 8px">Frist: ${fmtDate(asgn.duedate)}</div>` : '';
+    return `<div>
+      <div class="assign-status" id="ast${mod.id}"><span class="tag">Wird geladen…</span></div>
+      ${due}
+      <div class="assign-upload" id="aup${mod.id}" style="display:none">
+        <input type="file" id="afl${mod.id}" style="font-size:12px;margin-bottom:8px;display:block;color:var(--muted)">
+        <button class="abbtn" onclick="submitFile(${mod.id},${asgn.id||0})">Abgabe hochladen</button>
+        <div id="amg${mod.id}" style="font-size:12px;margin-top:6px;color:var(--muted)"></div>
+      </div>
+    </div>`;
+  }
+
+  // resource, page, url: Datei(en) via Proxy oder externer Link
+  const files = (mod.contents||[]).filter(f => f.fileurl && f.type === 'file');
+  if (files.length) return files.map(f => fileCard(f.filename||mod.name, f.fileurl, f.filesize)).join('');
+  if (mod.url) return `<div class="docfile" onclick="window.open('${esc(mod.url)}','_blank')">
+    <div class="dicon">${modLabel(mod.modname)}</div>
+    <div><div class="dname">${esc(mod.name)}</div><div class="dmeta">In Moodle öffnen</div></div>
+  </div>`;
+  return `<div class="ctext">Kein Inhalt verfügbar.</div>`;
+}
+
+// ── Modul-Zeile ──────────────────────────────────────────────────────────────
+function renderMod(mod, idx) {
+  const cls = ['s1','s2','s3'][idx%3];
+  const mid = 'm'+mod.id;
+  return `<div class="section ${cls}">
+    <div class="sec-hdr" onclick="toggleMod('${mid}')">
+      <div class="snum">${idx+1}</div>
+      <div class="smeta">
+        <div class="stitle">${esc(mod.name)}</div>
+        <div class="stags"><span class="tag">${modLabel(mod.modname)}</span></div>
+      </div>
+      <div class="sact" onclick="event.stopPropagation()">
+        <button class="chkbtn${done[mod.id]?' done':''}" data-mid="${mod.id}" onclick="markDone(${mod.id})"></button>
+      </div>
+      <span class="sec-chev" id="sc${mid}">▶</span>
+    </div>
+    <div class="scon" id="${mid}">${renderModContent(mod)}</div>
+  </div>`;
+}
+
+// ── Tabs (= Moodle-Abschnitte) ───────────────────────────────────────────────
+const COLORS = [['#E6F1FB','#0C447C'],['#EEEDFE','#3C3489'],['#E1F5EE','#085041'],['#FAEEDA','#412402']];
+
+function renderTabs() {
+  document.getElementById('tab-list').innerHTML = allSections.map((s,i) => {
+    const [bg,fg] = COLORS[i%COLORS.length];
+    const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${bg};border:1.5px solid ${fg};margin-right:5px;flex-shrink:0"></span>`;
+    return `<div class="htab${i===0?' active':''}" id="htab${i}" onclick="switchTab(${i})">
+      <span class="htab-label" style="display:flex;align-items:center">${dot}${esc(s.name||'Abschnitt '+(i+1))}</span>
+      <div class="htab-prog-row"><div class="htab-pbw"><div class="htab-pbf" id="tpb${i}" style="width:0%"></div></div>
+        <span class="htab-pct" id="tpct${i}">0%</span></div>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(idx) {
+  activeSec = idx;
+  allSections.forEach((_,i) => document.getElementById('htab'+i)?.classList.toggle('active', i===idx));
+  showSection(idx);
+}
+
+// ── Abschnitt anzeigen ───────────────────────────────────────────────────────
+function showSection(idx) {
+  const sec = allSections[idx];
+  if (!sec) return;
+  const mods = (sec.modules||[]).filter(m => m.uservisible);
+  const [bg,fg] = COLORS[idx%COLORS.length];
+  const num = String(idx+1).padStart(2,'0');
+  document.getElementById('dyn-content').innerHTML = `
+    <div class="topic open" id="curtopic">
+      <div class="topic-hdr" style="cursor:default;border-left-color:var(--blue)">
+        <div class="t-icon" style="background:${bg};color:${fg}">${num}</div>
+        <span class="t-title">${esc(sec.name||'Abschnitt '+(idx+1))}</span>
+        <div class="t-prog"><div class="pbw"><div class="pbf" id="secpb" style="width:0%"></div></div>
+          <span class="plbl" id="seclb">0%</span></div>
+      </div>
+      <div class="topic-body open">
+        ${mods.length ? mods.map((m,i) => renderMod(m,i)).join('') : '<p style="padding:16px;color:var(--muted)">Keine Inhalte.</p>'}
+      </div>
+    </div>`;
+  // Aufgaben-Status nachladen
+  mods.filter(m => m.modname==='assign').forEach(m => loadAssignStatus(m.id));
+  updateProgress();
+}
+
+// ── Aufgaben-Status ──────────────────────────────────────────────────────────
+async function loadAssignStatus(cmid) {
+  const asgn = assignMap[cmid];
+  const upEl  = document.getElementById('aup'+cmid);
+  if (!asgn) {
+    setStatus(cmid, 'Keine Aufgaben-ID', false, false);
+    if (upEl) upEl.style.display = 'block';
+    return;
+  }
+  try {
+    const d = await api('/api/submission-status?assignid='+asgn.id);
+    const st = d.laststatus || d.submission?.status || 'new';
+    const submitted = st === 'submitted';
+    const draft     = st === 'draft';
+    setStatus(cmid, submitted ? '✓ Abgegeben' : draft ? 'Entwurf gespeichert' : 'Noch nicht abgegeben', submitted, draft);
+    if (submitted) { done[cmid] = true; updateProgress(); }
+    if (!submitted && upEl) upEl.style.display = 'block';
+  } catch {
+    setStatus(cmid, 'Status nicht verfügbar', false, false);
+    if (upEl) upEl.style.display = 'block';
+  }
+}
+
+function setStatus(cmid, label, ok, draft) {
+  const el = document.getElementById('ast'+cmid);
+  if (!el) return;
+  const cls = ok ? 'status-ok' : draft ? 'status-draft' : '';
+  el.innerHTML = `<span class="tag ${cls}">${label}</span>`;
+}
+
+// ── Datei-Abgabe ─────────────────────────────────────────────────────────────
+async function submitFile(cmid, assignmentid) {
+  if (!assignmentid) { alert('Keine Aufgaben-ID. Seite neu laden.'); return; }
+  const fileInput = document.getElementById('afl'+cmid);
+  const msgEl     = document.getElementById('amg'+cmid);
+  if (!fileInput?.files?.length) { msgEl.textContent = 'Bitte zuerst eine Datei auswählen.'; return; }
+  const file = fileInput.files[0];
+  if (file.size > 50*1024*1024) { msgEl.textContent = 'Datei zu groß (max. 50 MB).'; return; }
+  msgEl.style.color = 'var(--muted)';
+  msgEl.textContent = 'Wird hochgeladen…';
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('assignmentid', assignmentid);
+  try {
+    const r    = await fetch(PROXY+'/api/submit', { method:'POST', body:fd });
+    const data = await r.json();
+    if (!r.ok || data.error) throw new Error(data.error || 'Unbekannter Fehler');
+    msgEl.style.color = '#0F6E56';
+    msgEl.textContent = '✓ Erfolgreich abgegeben!';
+    setStatus(cmid, '✓ Abgegeben', true, false);
+    document.getElementById('aup'+cmid).style.display = 'none';
+    done[cmid] = true;
+    updateProgress();
+  } catch(e) {
+    msgEl.style.color = '#c0392b';
+    msgEl.textContent = 'Fehler: ' + e.message;
+  }
+}
+
+// ── Toggle & Progress ────────────────────────────────────────────────────────
+function toggleMod(id) {
+  const el=document.getElementById(id), sc=document.getElementById('sc'+id);
+  const o=el.classList.toggle('open');
+  if(sc) sc.style.transform = o?'rotate(90deg)':'';
+}
+function markDone(modId) {
+  done[modId] = !done[modId];
+  document.querySelectorAll('[data-mid="'+modId+'"]').forEach(b =>
+    b.className = 'chkbtn'+(done[modId]?' done':''));
+  updateProgress();
+}
+function updateProgress() {
+  allSections.forEach((sec,i) => {
+    const mods = (sec.modules||[]).filter(m=>m.uservisible && m.modname!=='label');
+    const pct  = mods.length ? Math.round(mods.filter(m=>done[m.id]).length/mods.length*100) : 0;
+    const pb=document.getElementById('tpb'+i), pc=document.getElementById('tpct'+i);
+    if(pb) pb.style.width=pct+'%'; if(pc) pc.textContent=pct+'%';
+  });
+  const sec  = allSections[activeSec];
+  const mods = sec ? (sec.modules||[]).filter(m=>m.uservisible&&m.modname!=='label') : [];
+  const spct = mods.length ? Math.round(mods.filter(m=>done[m.id]).length/mods.length*100) : 0;
+  const pb=document.getElementById('secpb'), lb=document.getElementById('seclb');
+  if(pb) pb.style.width=spct+'%'; if(lb) lb.textContent=spct+'%';
+  const all  = allSections.flatMap(s=>(s.modules||[]).filter(m=>m.uservisible&&m.modname!=='label'));
+  const ov   = all.length ? Math.round(all.filter(m=>done[m.id]).length/all.length*100) : 0;
+  document.getElementById('overall-bar').style.width=ov+'%';
+  document.getElementById('overall-lbl').textContent=ov+'%';
+}
+
+// ── Start ────────────────────────────────────────────────────────────────────
+(async function init() {
+  try {
+    const [contents, assignData] = await Promise.all([
+      api('/api/course-contents'),
+      api('/api/assignments')
+    ]);
+    allSections = contents;
+    for (const c of (assignData.courses||[])) {
+      for (const a of (c.assignments||[])) assignMap[a.cmid] = a;
+    }
+    const courseName = assignData.courses?.[0]?.fullname || 'BWR';
+    document.getElementById('hero-title').textContent = courseName;
+    document.getElementById('hero-sub').textContent   = courseName + ' – Abschnitte & Aufgaben';
+    renderTabs();
+    showSection(0);
+  } catch(e) {
+    allSections = DEMO;
+    showNotice('Proxy nicht erreichbar – Demo-Modus. ('+e.message+')');
+    renderTabs();
+    showSection(0);
+  }
+})();
+</script>
+</body>
+</html>
