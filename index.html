@@ -22,10 +22,27 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* ── Top nav bar ── */
-.topbar{background:#fff;padding:0 24px;height:44px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
-.topbar-brand{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.12em;text-transform:uppercase}
-.topbar-menu{display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.topbar{background:#fff;padding:0 16px;height:44px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+.topbar-brand{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.12em;text-transform:uppercase;flex:1}
+.topbar-menu{display:flex;flex-direction:column;gap:4px;cursor:pointer;padding:6px;margin:-6px;flex-shrink:0}
 .topbar-menu span{display:block;width:20px;height:2px;background:var(--muted);border-radius:2px}
+
+/* ── Kurs-Drawer ── */
+.drawer-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:100}
+.drawer-backdrop.open{display:block}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:280px;background:#fff;z-index:101;box-shadow:2px 0 12px rgba(0,0,0,.15);transform:translateX(-100%);transition:transform .22s ease;display:flex;flex-direction:column}
+.drawer.open{transform:translateX(0)}
+.drawer-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.drawer-hdr-title{font-size:13px;font-weight:700;color:var(--blue)}
+.drawer-close{font-size:18px;color:var(--muted);cursor:pointer;line-height:1;padding:2px 4px}
+.drawer-close:hover{color:var(--text)}
+.drawer-section{padding:10px 0;border-bottom:1px solid var(--border)}
+.drawer-section-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:0 16px 6px}
+.drawer-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;font-size:13px;color:var(--text)}
+.drawer-item:hover{background:var(--surface)}
+.drawer-item.active{color:var(--blue);font-weight:600}
+.drawer-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.drawer-loading{padding:12px 16px;font-size:12px;color:var(--muted)}
 
 /* ── Hero header ── */
 .hero{background:#fff;padding:16px 24px 18px;border-bottom:3px solid var(--blue)}
@@ -78,6 +95,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .scon{display:none;padding:0 16px 16px 52px}
 .scon.open{display:block}
 
+/* ── Material-Reiter (innerhalb einer Phase) ── */
+.ctabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.ctab{font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);cursor:pointer;color:var(--muted);background:transparent}
+.ctab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.tp{display:none}
+.tp.on{display:block}
+
 /* ── Content elements ── */
 .ctext{font-size:13px;color:var(--text);line-height:1.7}
 .docfile{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-radius:6px;border:1px solid var(--border);cursor:pointer;margin-bottom:8px}
@@ -123,9 +147,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </head>
 <body>
 
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hdr">
+    <span class="drawer-hdr-title">Kurse</span>
+    <span class="drawer-close" onclick="closeDrawer()">✕</span>
+  </div>
+  <div id="drawer-courses"><p class="drawer-loading">Wird geladen…</p></div>
+</div>
+
 <div class="topbar">
+  <div class="topbar-menu" onclick="openDrawer()"><span></span><span></span><span></span></div>
   <span class="topbar-brand">MOS München</span>
-  <div class="topbar-menu"><span></span><span></span><span></span></div>
 </div>
 
 <div class="hero">
@@ -158,26 +191,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <script>
 const PROXY = 'http://localhost:3001';
-const done = {};        // cmid → bool (Abhaken)
+const done = {};
 let allSections = [];
-let assignMap   = {};   // cmid → { id: assignmentid, duedate, … }
+let assignMap   = {};
 let activeSec   = 0;
 
-// ── Fallback ──
+// ── Demo-Fallback (verschachtelt, testet beide Pfade) ──
 const DEMO = [
   { id: 9001, name: 'Buchführung – Das Konto', uservisible: true, modules: [
-    { id: 9011, name: 'Theorie: T-Konto, Soll & Haben', modname: 'resource', uservisible: true, url: '#', contents: [{ filesize: 430080 }] },
-    { id: 9012, name: 'Beispielaufgabe: Geschäftsvorfälle buchen', modname: 'resource', uservisible: true, url: '#', contents: [{ filesize: 189440 }] },
-    { id: 9013, name: 'Übungsaufgabe abgeben', modname: 'assign', uservisible: true, url: '#', contents: [] }
+    { id: 9011, modname: 'subsection', name: 'Theorie',          uservisible: true, customdata: '{"sectionid":"9101"}' },
+    { id: 9012, modname: 'subsection', name: 'Übung',            uservisible: true, customdata: '{"sectionid":"9102"}' },
+    { id: 9013, modname: 'subsection', name: 'Aufgabe & Abgabe', uservisible: true, customdata: '{"sectionid":"9103"}' }
+  ]},
+  { id: 9101, component: 'mod_subsection', name: 'Theorie', uservisible: true, modules: [
+    { id: 9111, modname: 'page',     name: 'Das T-Konto erklärt', uservisible: true, url: '#', contents: [] },
+    { id: 9112, modname: 'resource', name: 'Grundlagen.pdf',      uservisible: true, url: '#', contents: [{ filename:'Grundlagen.pdf', fileurl:'#', filesize: 430080 }] }
+  ]},
+  { id: 9102, component: 'mod_subsection', name: 'Übung', uservisible: true, modules: [
+    { id: 9121, modname: 'resource', name: 'Übungsblatt.pdf', uservisible: true, url: '#', contents: [{ filename:'Übungsblatt.pdf', fileurl:'#', filesize: 210000 }] }
+  ]},
+  { id: 9103, component: 'mod_subsection', name: 'Aufgabe & Abgabe', uservisible: true, modules: [
+    { id: 9131, modname: 'assign', name: 'Übungsaufgabe abgeben', uservisible: true, url: '#', contents: [] }
   ]},
   { id: 9002, name: 'VWL – Grundlagen der Preisbildung', uservisible: true, modules: [
     { id: 9021, name: 'Einführung: Angebot & Nachfrage', modname: 'resource', uservisible: true, url: '#', contents: [{ filesize: 696320 }] },
-    { id: 9022, name: 'Preiselastizität – Vertiefung', modname: 'resource', uservisible: true, url: '#', contents: [{ filesize: 1153433 }] },
-    { id: 9023, name: 'Gruppenaufgabe – Präsentation', modname: 'assign', uservisible: true, url: '#', contents: [] }
-  ]},
-  { id: 9003, name: 'Medien – Grundlagen', uservisible: true, modules: [
-    { id: 9031, name: 'Einführung in die Medienwelt', modname: 'url', uservisible: true, url: '#', contents: [] },
-    { id: 9032, name: 'Grundlagen.pdf', modname: 'resource', uservisible: true, url: '#', contents: [{ filename:'Grundlagen.pdf', fileurl:'#', filesize: 768000 }] }
+    { id: 9022, name: 'Gruppenaufgabe – Präsentation',   modname: 'assign',   uservisible: true, url: '#', contents: [] }
   ]}
 ];
 
@@ -196,7 +234,71 @@ function modLabel(t) { return ({resource:'PDF',url:'URL',page:'Seite',assign:'Au
 function proxyUrl(url) { return PROXY+'/api/file?url='+encodeURIComponent(url); }
 function showNotice(msg) { const el=document.getElementById('notice'); el.textContent=msg; el.style.display=msg?'block':'none'; }
 
-// ── Datei-Karte via Proxy ──
+// ── Baum aufbauen (Weg A: native Unterabschnitte) ────────────────────────────
+// Delegierte Abschnitte (component=mod_subsection) werden aus der Top-Level-Liste
+// herausgefiltert und als .phases[] an ihre Elternsektion gehängt.
+// Sektionen ohne Unterabschnitte erhalten phases:null → flacher Fallback.
+function buildTree(sections) {
+  const delegated = {};
+  sections.forEach(s => {
+    if (s.component === 'mod_subsection') delegated[String(s.id)] = s;
+  });
+  return sections
+    .filter(s => !s.component)
+    .map(s => {
+      const subMods = (s.modules||[]).filter(m => m.modname === 'subsection' && m.uservisible !== false);
+      if (!subMods.length) return { ...s, phases: null };
+      const phases = subMods.map(m => {
+        let sid;
+        try { sid = String(JSON.parse(m.customdata).sectionid); } catch {}
+        return sid ? delegated[sid] : null;
+      }).filter(Boolean);
+      return { ...s, phases: phases.length ? phases : null };
+    });
+}
+
+// Liefert alle zählbaren Module einer Sektion (für Fortschrittsbalken).
+function getSectionMods(sec) {
+  if (sec.phases) {
+    return sec.phases.flatMap(p => (p.modules||[]).filter(m => m.uservisible && m.modname !== 'label'));
+  }
+  return (sec.modules||[]).filter(m => m.uservisible && m.modname !== 'label' && m.modname !== 'subsection');
+}
+
+// ── Video-Embed & Medien-Hilfsfunktionen ─────────────────────────────────────
+function tryVideoEmbed(url) {
+  if (!url) return null;
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?(?:.*&)?v=|youtu\.be\/)([\w-]{11})/);
+  if (ytMatch) {
+    return `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:6px;margin-bottom:8px">
+      <iframe src="https://www.youtube.com/embed/${ytMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+    </div>`;
+  }
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) {
+    return `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:6px;margin-bottom:8px">
+      <iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>
+    </div>`;
+  }
+  if (/\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url)) {
+    return `<video controls style="width:100%;border-radius:6px;margin-bottom:8px;background:#000"><source src="${esc(url)}"></video>`;
+  }
+  return null;
+}
+
+// Verarbeitet Label-HTML: proxyt pluginfile-URLs, ersetzt YouTube-Plaintext-Links durch Embeds.
+function processLabelHtml(html) {
+  if (!html) return '';
+  // pluginfile.php-URLs in src/href-Attributen über Proxy leiten
+  let out = html.replace(/(src|href)="(https?:\/\/[^"]*pluginfile\.php[^"]*)"/g,
+    (_, attr, url) => `${attr}="${proxyUrl(url)}"`);
+  // Nackter YouTube/Vimeo-Link als einziger Text in einem Inline-Element → Embed
+  out = out.replace(/<(?:p|span|div)[^>]*>\s*(https?:\/\/(?:(?:www\.)?youtube\.com\/watch[^\s<"]*|youtu\.be\/[\w-]{11}[^\s<"]*|(?:www\.)?vimeo\.com\/\d+[^\s<"]*))\s*<\/(?:p|span|div)>/gi,
+    (_, url) => tryVideoEmbed(url) || `<p>${esc(url)}</p>`);
+  return out;
+}
+
+// ── Datei-Karte via Proxy ────────────────────────────────────────────────────
 function fileCard(name, fileurl, filesize) {
   const href = esc(proxyUrl(fileurl));
   return `<div class="docfile" onclick="window.open('${href}','_blank')">
@@ -205,9 +307,9 @@ function fileCard(name, fileurl, filesize) {
   </div>`;
 }
 
-// ── Modul-Inhalt ────────────────────────────────────────────────────────────
+// ── Modul-Inhalt ─────────────────────────────────────────────────────────────
 function renderModContent(mod) {
-  if (mod.modname === 'label') return `<div class="ctext">${mod.description || esc(mod.name)}</div>`;
+  if (mod.modname === 'label') return `<div class="ctext">${processLabelHtml(mod.description) || esc(mod.name)}</div>`;
 
   if (mod.modname === 'folder') {
     const files = (mod.contents||[]).filter(f => f.fileurl && f.type === 'file');
@@ -230,9 +332,27 @@ function renderModContent(mod) {
     </div>`;
   }
 
-  // resource, page, url: Datei(en) via Proxy oder externer Link
+  // url-Modul: echte externe URL steckt in contents[0].fileurl (type:'url')
+  if (mod.modname === 'url') {
+    const urlContent = (mod.contents||[]).find(c => c.type === 'url');
+    const actualUrl  = urlContent?.fileurl || '';
+    const embed = tryVideoEmbed(actualUrl);
+    if (embed) return embed;
+    const href = esc(actualUrl || mod.url || '#');
+    return `<div class="docfile" onclick="window.open('${href}','_blank')">
+      <div class="dicon">URL</div>
+      <div><div class="dname">${esc(mod.name)}</div><div class="dmeta">${esc(actualUrl||'In Moodle öffnen')}</div></div>
+    </div>`;
+  }
+
+  // resource / page: Dateien via Proxy – Videodateien eingebettet
   const files = (mod.contents||[]).filter(f => f.fileurl && f.type === 'file');
-  if (files.length) return files.map(f => fileCard(f.filename||mod.name, f.fileurl, f.filesize)).join('');
+  if (files.length) {
+    return files.map(f => {
+      const embed = tryVideoEmbed(f.fileurl);
+      return embed || fileCard(f.filename||mod.name, f.fileurl, f.filesize);
+    }).join('');
+  }
   if (mod.url) return `<div class="docfile" onclick="window.open('${esc(mod.url)}','_blank')">
     <div class="dicon">${modLabel(mod.modname)}</div>
     <div><div class="dname">${esc(mod.name)}</div><div class="dmeta">In Moodle öffnen</div></div>
@@ -240,7 +360,63 @@ function renderModContent(mod) {
   return `<div class="ctext">Kein Inhalt verfügbar.</div>`;
 }
 
-// ── Modul-Zeile ──────────────────────────────────────────────────────────────
+// ── Phasen-Rendering ─────────────────────────────────────────────────────────
+// Gruppiert Module einer Phase nach modname; bei >1 Typ entstehen Material-Reiter.
+function groupByType(mods) {
+  const order = ['label','page','resource','url','assign','quiz','folder'];
+  const map = {};
+  mods.forEach(m => { if (!map[m.modname]) map[m.modname]=[]; map[m.modname].push(m); });
+  return Object.entries(map)
+    .sort(([a],[b]) => { const ai=order.indexOf(a),bi=order.indexOf(b); return (ai<0?99:ai)-(bi<0?99:bi); })
+    .map(([modname, ms]) => ({ modname, label: modLabel(modname), mods: ms }));
+}
+
+function renderMaterialTabs(prefix, groups) {
+  if (!groups.length) return '<p style="padding:8px 0;color:var(--muted);font-size:13px">Keine Inhalte.</p>';
+  if (groups.length === 1) return groups[0].mods.map(m => renderModContent(m)).join('');
+  const tabs   = groups.map((g,i) => `<button class="ctab${i===0?' on':''}" onclick="switchCtab('${prefix}',${i},${groups.length})">${esc(g.label)}</button>`).join('');
+  const panels = groups.map((g,i) => `<div class="tp${i===0?' on':''}" id="${prefix}-${i}">${g.mods.map(m=>renderModContent(m)).join('')}</div>`).join('');
+  return `<div class="ctabs" id="ctabs-${prefix}">${tabs}</div>${panels}`;
+}
+
+function switchCtab(prefix, idx, total) {
+  for(let i=0;i<total;i++) { const el=document.getElementById(prefix+'-'+i); if(el) el.className='tp'+(i===idx?' on':''); }
+  document.getElementById('ctabs-'+prefix)?.querySelectorAll('.ctab').forEach((t,i)=>t.className='ctab'+(i===idx?' on':''));
+}
+
+function renderPhase(phase, pi) {
+  const mods   = (phase.modules||[]).filter(m => m.uservisible);
+  const cls    = ['s1','s2','s3'][pi%3];
+  const pid    = 'ph'+phase.id;
+  const groups = groupByType(mods);
+  const modIds = mods.filter(m => m.modname !== 'label').map(m => m.id);
+  const allDone = modIds.length > 0 && modIds.every(id => done[id]);
+  return `<div class="section ${cls}">
+    <div class="sec-hdr" onclick="toggleMod('${pid}')">
+      <div class="snum">${pi+1}</div>
+      <div class="smeta">
+        <div class="stitle">${esc(phase.name)}</div>
+        <div class="stags">${groups.map(g=>`<span class="tag">${esc(g.label)}</span>`).join('')}</div>
+      </div>
+      <div class="sact" onclick="event.stopPropagation()">
+        <button class="chkbtn${allDone?' done':''}" data-phase="${phase.id}" onclick="markPhaseDone(${phase.id},[${modIds.join(',')}])"></button>
+      </div>
+      <span class="sec-chev" id="sc${pid}">▶</span>
+    </div>
+    <div class="scon ${pi===0?'open':''}" id="${pid}">${renderMaterialTabs(pid, groups)}</div>
+  </div>`;
+}
+
+function markPhaseDone(phaseId, modIds) {
+  if (!modIds.length) return;
+  const nowDone = !modIds.every(id => done[id]);
+  modIds.forEach(id => { done[id] = nowDone; });
+  document.querySelectorAll('[data-phase="'+phaseId+'"]').forEach(b =>
+    b.className = 'chkbtn'+(nowDone?' done':''));
+  updateProgress();
+}
+
+// ── Modul-Zeile (flacher Modus, abwärtskompatibel) ──────────────────────────
 function renderMod(mod, idx) {
   const cls = ['s1','s2','s3'][idx%3];
   const mid = 'm'+mod.id;
@@ -260,14 +436,14 @@ function renderMod(mod, idx) {
   </div>`;
 }
 
-// ── Tabs (= Moodle-Abschnitte) ───────────────────────────────────────────────
+// ── Tabs (= Moodle-Abschnitte, nur Elternsektionen) ─────────────────────────
 const COLORS = [['#E6F1FB','#0C447C'],['#EEEDFE','#3C3489'],['#E1F5EE','#085041'],['#FAEEDA','#412402']];
 
 function renderTabs() {
   document.getElementById('tab-list').innerHTML = allSections.map((s,i) => {
     const [bg,fg] = COLORS[i%COLORS.length];
     const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${bg};border:1.5px solid ${fg};margin-right:5px;flex-shrink:0"></span>`;
-    return `<div class="htab${i===0?' active':''}" id="htab${i}" onclick="switchTab(${i})">
+    return `<div class="htab${i===0?' active':''}" id="htab${i}" onclick="switchHTab(${i})">
       <span class="htab-label" style="display:flex;align-items:center">${dot}${esc(s.name||'Abschnitt '+(i+1))}</span>
       <div class="htab-prog-row"><div class="htab-pbw"><div class="htab-pbf" id="tpb${i}" style="width:0%"></div></div>
         <span class="htab-pct" id="tpct${i}">0%</span></div>
@@ -275,7 +451,7 @@ function renderTabs() {
   }).join('');
 }
 
-function switchTab(idx) {
+function switchHTab(idx) {
   activeSec = idx;
   allSections.forEach((_,i) => document.getElementById('htab'+i)?.classList.toggle('active', i===idx));
   showSection(idx);
@@ -285,9 +461,19 @@ function switchTab(idx) {
 function showSection(idx) {
   const sec = allSections[idx];
   if (!sec) return;
-  const mods = (sec.modules||[]).filter(m => m.uservisible);
   const [bg,fg] = COLORS[idx%COLORS.length];
   const num = String(idx+1).padStart(2,'0');
+
+  let bodyHTML;
+  if (sec.phases) {
+    bodyHTML = sec.phases.length
+      ? sec.phases.map((p,i) => renderPhase(p,i)).join('')
+      : '<p style="padding:16px;color:var(--muted)">Keine Phasen verfügbar.</p>';
+  } else {
+    const mods = (sec.modules||[]).filter(m => m.uservisible && m.modname !== 'subsection');
+    bodyHTML = mods.length ? mods.map((m,i) => renderMod(m,i)).join('') : '<p style="padding:16px;color:var(--muted)">Keine Inhalte.</p>';
+  }
+
   document.getElementById('dyn-content').innerHTML = `
     <div class="topic open" id="curtopic">
       <div class="topic-hdr" style="cursor:default;border-left-color:var(--blue)">
@@ -297,11 +483,14 @@ function showSection(idx) {
           <span class="plbl" id="seclb">0%</span></div>
       </div>
       <div class="topic-body open">
-        ${mods.length ? mods.map((m,i) => renderMod(m,i)).join('') : '<p style="padding:16px;color:var(--muted)">Keine Inhalte.</p>'}
+        ${bodyHTML}
       </div>
     </div>`;
-  // Aufgaben-Status nachladen
-  mods.filter(m => m.modname==='assign').forEach(m => loadAssignStatus(m.id));
+
+  const allMods = sec.phases
+    ? sec.phases.flatMap(p => (p.modules||[]).filter(m => m.uservisible))
+    : (sec.modules||[]).filter(m => m.uservisible);
+  allMods.filter(m => m.modname === 'assign').forEach(m => loadAssignStatus(m.id));
   updateProgress();
 }
 
@@ -378,30 +567,99 @@ function markDone(modId) {
 }
 function updateProgress() {
   allSections.forEach((sec,i) => {
-    const mods = (sec.modules||[]).filter(m=>m.uservisible && m.modname!=='label');
+    const mods = getSectionMods(sec);
     const pct  = mods.length ? Math.round(mods.filter(m=>done[m.id]).length/mods.length*100) : 0;
     const pb=document.getElementById('tpb'+i), pc=document.getElementById('tpct'+i);
     if(pb) pb.style.width=pct+'%'; if(pc) pc.textContent=pct+'%';
   });
   const sec  = allSections[activeSec];
-  const mods = sec ? (sec.modules||[]).filter(m=>m.uservisible&&m.modname!=='label') : [];
+  const mods = sec ? getSectionMods(sec) : [];
   const spct = mods.length ? Math.round(mods.filter(m=>done[m.id]).length/mods.length*100) : 0;
   const pb=document.getElementById('secpb'), lb=document.getElementById('seclb');
   if(pb) pb.style.width=spct+'%'; if(lb) lb.textContent=spct+'%';
-  const all  = allSections.flatMap(s=>(s.modules||[]).filter(m=>m.uservisible&&m.modname!=='label'));
+  const all  = allSections.flatMap(s => getSectionMods(s));
   const ov   = all.length ? Math.round(all.filter(m=>done[m.id]).length/all.length*100) : 0;
   document.getElementById('overall-bar').style.width=ov+'%';
   document.getElementById('overall-lbl').textContent=ov+'%';
 }
 
+// ── Kurs-Drawer ──────────────────────────────────────────────────────────────
+let activeCourseId = '';
+const DRAWER_COLORS = ['#E6F1FB','#EEEDFE','#E1F5EE','#FAEEDA','#FCE8D8','#E8F5E1'];
+const DRAWER_FG     = ['#0C447C','#3C3489','#085041','#412402','#5a2000','#2a4a00'];
+
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-backdrop').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-backdrop').classList.remove('open');
+}
+
+async function loadDrawerCourses() {
+  const el = document.getElementById('drawer-courses');
+  try {
+    const courses = await api('/api/user-courses');
+    if (!Array.isArray(courses) || !courses.length) { el.innerHTML = '<p class="drawer-loading">Keine Kurse gefunden.</p>'; return; }
+    el.innerHTML = `<div class="drawer-section">
+      <div class="drawer-section-label">Meine Kurse</div>
+      ${courses.map((c,i) => {
+        const bg = DRAWER_COLORS[i%DRAWER_COLORS.length];
+        const fg = DRAWER_FG[i%DRAWER_FG.length];
+        const active = String(c.id) === String(activeCourseId);
+        return `<div class="drawer-item${active?' active':''}" onclick="switchCourse(${c.id})">
+          <span class="drawer-item-dot" style="background:${bg};border:1.5px solid ${fg}"></span>
+          ${esc(c.shortname||c.fullname)}
+        </div>`;
+      }).join('')}
+    </div>`;
+  } catch(e) {
+    el.innerHTML = `<p class="drawer-loading">Fehler: ${esc(e.message)}</p>`;
+  }
+}
+
+async function switchCourse(courseId) {
+  closeDrawer();
+  activeCourseId = String(courseId);
+  document.getElementById('dyn-content').innerHTML = '<p style="padding:16px;color:var(--muted);font-size:13px">Kursinhalte werden geladen…</p>';
+  document.getElementById('tab-list').innerHTML = '<div class="htab active"><span class="htab-label">Wird geladen…</span><div class="htab-prog-row"><div class="htab-pbw"><div class="htab-pbf" style="width:0%"></div></div><span class="htab-pct">0%</span></div></div>';
+  showNotice('');
+  Object.keys(done).forEach(k => delete done[k]);
+  Object.keys(assignMap).forEach(k => delete assignMap[k]);
+  try {
+    const qs = '?courseid='+encodeURIComponent(courseId);
+    const [contents, assignData] = await Promise.all([
+      api('/api/course-contents'+qs),
+      api('/api/assignments'+qs)
+    ]);
+    allSections = buildTree(contents);
+    activeSec = 0;
+    for (const c of (assignData.courses||[])) {
+      for (const a of (c.assignments||[])) assignMap[a.cmid] = a;
+    }
+    const courseName = assignData.courses?.[0]?.fullname || 'Kurs '+courseId;
+    document.getElementById('hero-title').textContent = courseName;
+    document.getElementById('hero-sub').textContent   = courseName + ' – Abschnitte & Aufgaben';
+    renderTabs();
+    showSection(0);
+    loadDrawerCourses(); // Häkchen aktualisieren
+  } catch(e) {
+    showNotice('Fehler beim Laden: '+e.message);
+  }
+}
+
 // ── Start ────────────────────────────────────────────────────────────────────
 (async function init() {
   try {
+    const courseId = new URLSearchParams(location.search).get('courseid') || '';
+    activeCourseId = courseId;
+    const qs = courseId ? '?courseid='+encodeURIComponent(courseId) : '';
     const [contents, assignData] = await Promise.all([
-      api('/api/course-contents'),
-      api('/api/assignments')
+      api('/api/course-contents'+qs),
+      api('/api/assignments'+qs)
     ]);
-    allSections = contents;
+    allSections = buildTree(contents);
     for (const c of (assignData.courses||[])) {
       for (const a of (c.assignments||[])) assignMap[a.cmid] = a;
     }
@@ -410,11 +668,13 @@ function updateProgress() {
     document.getElementById('hero-sub').textContent   = courseName + ' – Abschnitte & Aufgaben';
     renderTabs();
     showSection(0);
+    loadDrawerCourses();
   } catch(e) {
-    allSections = DEMO;
+    allSections = buildTree(DEMO);
     showNotice('Proxy nicht erreichbar – Demo-Modus. ('+e.message+')');
     renderTabs();
     showSection(0);
+    loadDrawerCourses();
   }
 })();
 </script>
